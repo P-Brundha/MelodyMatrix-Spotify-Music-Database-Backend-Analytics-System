@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Music App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1, h2 { color: #333; }
+    input, button { margin: 5px; padding: 5px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #eee; }
+    .pagination { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Music App</h1>
+
+  <section>
+    <h2>Artists</h2>
+    <input type="text" id="artistSearch" placeholder="Search artists..." />
+    <button onclick="searchArtists()">Search Artists</button>
+
+    <table id="artistsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Followers</th>
+          <th>Genres</th>
+          <th>Popularity</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="pagination">
+      <button id="prevArtists" onclick="prevArtists()">Previous</button>
+      <button id="nextArtists" onclick="nextArtists()">Next</button>
+    </div>
+  </section>
+
+  <hr />
+
+  <section>
+    <h2>Tracks</h2>
+    <input type="text" id="trackSearch" placeholder="Search tracks..." />
+    <label>Min Popularity: <input type="number" id="minPopularity" value="0" min="0" max="100" /></label>
+    <label>Max Popularity: <input type="number" id="maxPopularity" value="100" min="0" max="100" /></label>
+    <button onclick="searchTracks()">Search Tracks</button>
+
+    <table id="tracksTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Popularity</th>
+          <th>Duration (ms)</th>
+          <th>Explicit</th>
+          <th>Artists</th>
+          <th>Release Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="pagination">
+      <button id="prevTracks" onclick="prevTracks()">Previous</button>
+      <button id="nextTracks" onclick="nextTracks()">Next</button>
+    </div>
+  </section>
+
+<script>
+  const apiBase = 'http://127.0.0.1:5000';
+  const limit = 20;
+
+  // Artists pagination & search
+  let artistsPage = 1;
+  let artistsSearchTerm = '';
+
+  async function fetchArtists(page = 1) {
+    try {
+      const res = await fetch(`${apiBase}/artists?page=${page}&limit=${limit}&search=${encodeURIComponent(artistsSearchTerm)}`);
+      if (!res.ok) throw new Error('Failed to fetch artists');
+      const data = await res.json();
+
+      const tbody = document.querySelector('#artistsTable tbody');
+      tbody.innerHTML = '';
+
+      data.artists.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${a.name}</td>
+          <td>${a.followers}</td>
+          <td>${a.genres}</td>
+          <td>${a.popularity}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      artistsPage = data.page;
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  function searchArtists() {
+    artistsSearchTerm = document.getElementById('artistSearch').value.trim();
+    fetchArtists(1);
+  }
+
+  function prevArtists() {
+    if (artistsPage > 1) fetchArtists(artistsPage - 1);
+  }
+
+  function nextArtists() {
+    fetchArtists(artistsPage + 1);
+  }
+
+  // Tracks pagination, search & popularity filter
+  let tracksPage = 1;
+  let tracksSearchTerm = '';
+  let minPopularity = 0;
+  let maxPopularity = 100;
+
+  async function fetchTracks(page = 1) {
+    try {
+      minPopularity = document.getElementById('minPopularity').value || 0;
+      maxPopularity = document.getElementById('maxPopularity').value || 100;
+      tracksSearchTerm = document.getElementById('trackSearch').value.trim();
+
+      const res = await fetch(`${apiBase}/tracks?page=${page}&limit=${limit}&search=${encodeURIComponent(tracksSearchTerm)}&min_popularity=${minPopularity}&max_popularity=${maxPopularity}`);
+      if (!res.ok) throw new Error('Failed to fetch tracks');
+      const data = await res.json();
+
+      const tbody = document.querySelector('#tracksTable tbody');
+      tbody.innerHTML = '';
+
+      data.tracks.forEach(t => {
+        const explicitText = t.explicit ? 'Yes' : 'No';
+        const releaseDate = t.release_date ? new Date(t.release_date).toLocaleDateString() : '';
+        const artistsDisplay = t.artists.length > 100 ? t.artists.substring(0, 100) + '...' : t.artists;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${t.name}</td>
+          <td>${t.popularity}</td>
+          <td>${t.duration_ms}</td>
+          <td>${explicitText}</td>
+          <td>${artistsDisplay}</td>
+          <td>${releaseDate}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tracksPage = data.page;
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  function searchTracks() {
+    fetchTracks(1);
+  }
+
+  function prevTracks() {
+    if (tracksPage > 1) fetchTracks(tracksPage - 1);
+  }
+
+  function nextTracks() {
+    fetchTracks(tracksPage + 1);
+  }
+
+  // Initial load
+  fetchArtists();
+  fetchTracks();
+</script>
+</body>
+</html>

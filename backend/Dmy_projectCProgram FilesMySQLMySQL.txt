@@ -1,0 +1,38 @@
+D:\my_project>"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p
+Enter password: **********
+
+CREATE DATABASE IF NOT EXISTS musicccc_db;
+USE musicccc_db;
+
+DROP TABLE IF EXISTS artists;
+CREATE TABLE artists (
+    id VARCHAR(50) PRIMARY KEY,
+    followers INT,
+    genres VARCHAR(255),
+    name VARCHAR(255) NOT NULL,
+    popularity INT
+);
+
+DROP TABLE IF EXISTS tracks;
+CREATE TABLE tracks (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    popularity INT,
+    duration_ms INT,
+    explicit BOOLEAN,
+    artists VARCHAR(255),    -- Assuming this is a string with artist names or IDs?
+    id_artists VARCHAR(50),  -- FK to artists.id?
+    release_date DATE,
+    danceability FLOAT,
+    energy FLOAT,
+    `key` INT,
+    loudness FLOAT,
+    mode INT,
+    speechiness FLOAT,
+    acousticness FLOAT,
+    instrumentalness FLOAT,
+    liveness FLOAT,
+    valence FLOAT,
+    tempo FLOAT,
+    time_signature INT
+);
